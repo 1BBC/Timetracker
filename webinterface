@@ -1,0 +1,123 @@
+#!perl
+
+=head1 NAME
+
+  Timetracker
+
+=cut
+
+our ($html, 
+  %FORM, 
+  $db, 
+  %conf, 
+  $admin);
+
+use Timetracker::db::Timetracker;
+my $Timetracker = Timetracker->new($db, $admin, \%conf);
+
+use Data::Dumper;
+
+
+#**********************************************************
+=head2 add() - add and delete items
+
+=cut
+#**********************************************************
+sub add {
+
+    if ($FORM{"nameadd"}) {
+    $Timetracker->add(
+      {
+        NAME => $FORM{nameadd},
+        NUM1 => $FORM{num1add},
+        NUM2 => $FORM{num2add},
+        NUM3 => $FORM{num3add},
+        DATE => $FORM{date},
+      }
+    );
+
+    $html->message("info", "OK", "YOUADDELEMENT");
+  }
+  elsif ($FORM{delete}) {
+    $Timetracker->del($FORM{delete});
+
+    $html->message("info", "OK", "YOUDELETEELEMENT");
+  }
+
+  $html->tpl_show(_include("add_form", "Timetracker"));
+
+  # use Abills::Base;
+  # _bp("1", $Decomposition_list,);
+
+  my $table = $html->table(
+    {
+      width   => "100%",
+      caption => "TIMETRACKER",
+      title   => [ "ID", "NAME", "NUM1", "NUM2", "NUM3", "DATE", "DELETE" ],
+      qs      => $pages_qs,
+      ID      => "TABLE_ID",
+      export  => 1
+    }
+  );
+
+  my $Timetracker_list = $Timetracker->list({ COLS_NAME => 1 });
+  #  $Timetracker->{debug}=1;
+	# _bp("1", $Timetracker_list,);
+
+  foreach my $item (@$Timetracker_list) {
+    my $del_button = $html->button("", "index=$index&delete=$item->{id}", { class => "btn btn-default", ADD_ICON => "glyphicon glyphicon-remove" });
+    $table->addrow($item->{id}, $item->{name}, $item->{num1}, $item->{num2}, $item->{num3}, $item->{date}, $del_button);
+  }
+
+  print $table->show();
+
+  return 1;
+
+}
+
+#**********************************************************
+=head2 add() - add and delete items
+
+=cut
+#**********************************************************
+sub timetracker {
+
+	my @names = ("Admin", "User", "Support");
+
+	$html->tpl_show(_include("timepicker_form", "Timetracker"));
+
+	my $table = $html->table(
+	  {
+	    width   => "100%",
+	    caption => "TIMETRACKER",
+	    title   => [ "ID", "NAME", "NUM1", "NUM2", "NUM3"],
+	    qs      => $pages_qs,
+	    ID      => "TABLE_ID",
+	    export  => 1
+	  }
+	);
+
+  my $date_str = $FORM{datepick1} . '/' . $FORM{datepick2};
+
+	my $Timetracker_list = $Timetracker->listfortimetracker({ COLS_NAME => 1, DATE => $date_str });
+	# $Timetracker->{debug}=1;
+	# _bp("1", $Timetracker_list,);
+	my $count = 1;
+
+  foreach my $name (@names) {
+  my $sumofnum1 = 0;
+  my $sumofnum2 = 0;
+  my $sumofnum3 = 0;
+   foreach my $item (@$Timetracker_list) {
+    if ($item->{name} eq $name)
+    {
+      $sumofnum1 += $item->{num1};
+      $sumofnum2 += $item->{num2};
+      $sumofnum3 += $item->{num3};
+    }
+   }
+   $table->addrow($count++, $name, $sumofnum1, $sumofnum2, $sumofnum3); 
+  }
+
+	print $table->show(); 	
+}
