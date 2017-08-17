@@ -68,17 +68,21 @@ sub list{
   #my $PG        = ($attr->{PG})        ? $attr->{PG}             : 0;
   #my $PAGE_ROWS = ($attr->{PAGE_ROWS}) ? int($attr->{PAGE_ROWS}) : 25;
 
-  # my $WHERE = $self->search_former( $attr, [
-  #     [ 'NAME', 'STR', 'name', 1 ],
-  #     [ 'DIFFICULT', 'int', 'difficult', 1 ],
-  #     [ 'ID', 'INT', 'id', ],
-  #   ],
-  #   { WHERE => 1,
-  #   }
-  # );
+  my $WHERE = $self->search_former( $attr, [
+      [ 'ID', 'INT', 'id', 1],
+      [ 'NAME', 'STR', 'name', 1 ],
+      [ 'NUM1', 'int', 'num1', 1 ],
+      [ 'NUM2', 'int', 'num2', 1 ],
+      [ 'NUM3', 'int', 'num3', 1 ],
+      [ 'DATE', 'DATE', 'date', 1 ],
+      
+    ],
+    { WHERE => 1,
+    }
+  );
 
   $self->query2( "SELECT id, name, num1, num2, num3, date
-     FROM timetracker;",
+     FROM timetracker $WHERE ORDER BY $SORT $DESC;",
     undef,
     {COLS_NAME => 1}
   );
@@ -110,7 +114,7 @@ sub listfortimetracker{
     }
   );
 
-  $self->query2( "SELECT id, name, num1, num2, num3
+  $self->query2( "SELECT id, name, num1, num2, num3, date
      FROM timetracker
      $WHERE;",
     undef,

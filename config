@@ -2,5 +2,7 @@
 %FUNCTIONS_LIST = (
   "01:0:Timetracker:null:"             => 5,
   "02:1:timetracker:timetracker:" 	   => 5,
+  "03:1:addnewitem_main:add_main:"     => 5,
   "03:1:addnewitem:add:"               => 5,
+  "04:1:calendartracker:calendar:"     => 5,
 );

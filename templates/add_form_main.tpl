@@ -1,4 +1,4 @@
-     <div class="row">
+      <div class="row">
       <div class='col-xs-12 col-sm-6 col-md-4 col-sm-offset-3 col-md-offset-4'> 
         <!-- Add task -->
         <div class='box box-default'>
@@ -6,9 +6,12 @@
           <div class='box-body'>
             <form class='form-horizontal' method='GET' action='$SELF_URL'>
               <input type='hidden' name='index' value='$index'>
-             <input  type='hidden' name='nameadd' value='%ADMIN%'>
-
-
+              <div class='form-group'>
+                <label for='inputtext3' class='col-sm-2 control-label'>Name</label>
+                <div class='col-sm-10'>
+                  <input  type='text' class='form-control' id='inputtext3' placeholder='Name' name='nameadd' value='%ADMIN%'>
+                </div>
+              </div>
               <div class='form-group'>
                 <label for='inputtext3' class='col-sm-2 control-label'>Num1</label>
                 <div class='col-sm-10'>
