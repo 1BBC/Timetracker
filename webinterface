@@ -21,493 +21,95 @@ use strict;
 
 
 #**********************************************************
-=head2 add() - add and delete items
+=head2 timetracker() - Accounting and time allocation
 
 =cut
 #**********************************************************
-sub add_main {
-  # _bp("1", $Decomposition_list,);
-    if ($FORM{"nameadd"}) {
-    $Timetracker->add(
-      {
-        NAME => $FORM{nameadd},
-        NUM1 => $FORM{num1add},
-        NUM2 => $FORM{num2add},
-        NUM3 => $FORM{num3add},
-        DATE => $FORM{date},
-      }
-    );
-
-    $html->message("info", "OK", "YOUADDELEMENT");
-  }
-  elsif ($FORM{delete}) {
-    $Timetracker->del($FORM{delete});
-
-    $html->message("info", "OK", "YOUDELETEELEMENT");
-  }
-
-  $html->tpl_show(_include("add_form_main", "Timetracker"), {ADMIN => $admin->{A_FIO}, DATE => $DATE});
-
-  # use Abills::Base;
-  # _bp("1", $Decomposition_list,);
-
-  my $table = $html->table(
-    {
-      width   => "100%",
-      caption => "TIMETRACKER",
-      title   => [ "ID", "NAME", "NUM1", "NUM2", "NUM3", "DATE", "DELETE" ],
-      qs      => $pages_qs,
-      ID      => "TABLE_ID",
-      export  => 1
-    }
-  );
-  # $Timetracker->{debug}=1;
 
 
-  my $Timetracker_list = $Timetracker->list({ COLS_NAME => 1, DESC => "desc" });
-   # _bp("1", $Timetracker_list,);
-
-  foreach my $item (@$Timetracker_list) {
-    my $del_button = $html->button("", "index=$index&delete=$item->{id}", { class => "btn btn-default", ADD_ICON => "glyphicon glyphicon-remove" });
-    $table->addrow($item->{id}, $item->{name}, $item->{num1}, $item->{num2}, $item->{num3}, $item->{date}, $del_button);
-  }
-
-  print $table->show();
-
-  return 1;
-
-}
-
-#**********************************************************
-=head2 add() - add and delete items
-
-=cut
-#**********************************************************
-sub add {
-  # _bp("1", $Decomposition_list,);
-    my $dateform = $DATE;
-
-    if ($FORM{"nameadd"}) {
-    $Timetracker->add(
-      {
-        NAME => $FORM{nameadd},
-        NUM1 => $FORM{num1add},
-        NUM2 => $FORM{num2add},
-        NUM3 => $FORM{num3add},
-        DATE => $FORM{date},
-      }
-    );
-
-    $html->message("info", "OK", "YOUADDELEMENT");
-    $dateform = $FORM{date};
-  }
-  elsif ($FORM{delete}) {
-    $Timetracker->del($FORM{delete});
-
-    $html->message("info", "OK", "YOUDELETEELEMENT");
-  }
-
-
-  $html->tpl_show(_include("add_form", "Timetracker"), {ADMIN => $admin->{A_FIO}, DATE => $dateform});
-
-  $FORM{nameadd} = "";
-  $FORM{num1add} = "";
-  $FORM{num2add} = "";
-  $FORM{num3add} = "";
-  $FORM{date} = "";
-  $FORM{delete} = "";
-
-
-
-  print $FORM{nameadd};
-
-  # use Abills::Base;
-  # _bp("1", $Decomposition_list,);
-
-  my $table = $html->table(
-    {
-      width   => "100%",
-      caption => "TIMETRACKER",
-      title   => [  "DATE", "NUM1", "NUM2", "NUM3", "DELETE" ],
-      qs      => $pages_qs,
-      ID      => "TABLE_ID",
-      export  => 1
-    }
-  );
-  # $Timetracker->{debug}=1;
-
-
-  my $Timetracker_list = $Timetracker->list({ COLS_NAME => 1, DESC => "desc", NAME => $admin->{A_FIO} });
-   # _bp("1", $Timetracker_list,);
-
-  foreach my $item (@$Timetracker_list) {
-    my $del_button = $html->button("", "index=$index&delete=$item->{id}", { class => "btn btn-default", ADD_ICON => "glyphicon glyphicon-remove" });
-    $table->addrow($item->{date},, $item->{num1}, $item->{num2}, $item->{num3},  $del_button);
-  }
-
-  print $table->show();
-
-  return 1;
-
-}
-
-#**********************************************************
-=head2 add() - add and delete items
-
-=cut
-#**********************************************************
 sub timetracker {
 
-	my @names = ("Admin", "User", "Support");
+  if ($FORM{add_form}) {
 
-	$html->tpl_show(_include("timepicker_form", "Timetracker"));
+    my $date_for_picker = $DATE;
 
-	my $table = $html->table(
-	  {
-	    width   => "100%",
-	    caption => "TIMETRACKER",
-	    title   => [ "ID", $lang{NAME}, "Support", "Sprint", "OSBB"],
-	    qs      => $pages_qs,
-	    ID      => "TABLE_ID",
-	    export  => 1
-	  }
-	);
-
-  my $date_str = $FORM{datepick1} . '/' . $FORM{datepick2};
-
-	my $Timetracker_list = $Timetracker->listfortimetracker({ COLS_NAME => 1, DATE => $date_str });
-	# $Timetracker->{debug}=1;
-	# s
-	my $count = 1;
-
-  foreach my $name (@names) {
-  my $sumofnum1 = 0;
-  my $sumofnum2 = 0;
-  my $sumofnum3 = 0;
-   foreach my $item (@$Timetracker_list) {
-    if ($item->{name} eq $name)
-    {
-      $sumofnum1 += $item->{num1};
-      $sumofnum2 += $item->{num2};
-      $sumofnum3 += $item->{num3};
-    }
-   }
-   $table->addrow($count++, $name, $sumofnum1, $sumofnum2, $sumofnum3); 
-  }
-
-	print $table->show(); 	
-}
-
-sub calendar {
-
-  my ($year1, $month1, $day1, $week1);
-  my $dateform_month;
-  my $dateform_week;
-  my %hash             = ();
-  my @daysofw = ('пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс');
-  my @lastday = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
-
-  my $datepick1;
-  my $datepick2;
-  my $date_str;
-
-  my $monday_of_week;
-  my $datepick1;
-  my $count = 1;
-
-  my $checked_month;
-  my $checked_week;
-
-  my $checked_select_statistics = "";
-  my $checked_select_full_calendar = "";
-  my $checked_select_notfull_calendar = "";
-
-  if($FORM{timetracker_type} eq "full_calendar"){
-    $checked_select_full_calendar = "selected";
-
-  }
-  elsif($FORM{timetracker_type} eq "notfull_calendar"){
-
-    $checked_select_notfull_calendar = "selected";
-  }
-  else{
-    $checked_select_statistics = "selected";
-
-  }
-
-
-
-
-
-  if($FORM{radioform} eq "month")
-  {
-    $checked_month = "checked";
-    $checked_week = "";
-
-    ($year1, $month1) = split '-', $FORM{month_form};
-    $lastday[1] = ($year1 % 4) ? 28 : 29;
-    $datepick1 = "$year1-$month1-01";
-    $datepick2 = "$year1-$month1-$lastday[ $month1 - 1 ]";
-    $date_str         = $datepick1 . '/' . $datepick2;
-
-
-    $dateform_month = $FORM{month_form};
-    ($year1, $month1, $day1) = split '-', $DATE;  
-    $dateform_week = ($month1 > 7 ) ? int(((_period_days("$year1-01-01",$DATE))/7)+1) : 1;
-    $dateform_week = "$year1-W$dateform_week"
-    
-  }
-  elsif($FORM{radioform} eq "week"){
-
-    $checked_month = "";
-    $checked_week = "checked";
-
-    ($year1, $month1, $day1) = split '-', $DATE;  
-    $dateform_month = "$year1-$month1";
-    $dateform_week = $FORM{week_form};
-
-    ($year1, $week1) = split '-W', $FORM{week_form};
-    $lastday[1] = ($year1 % 4) ? 28 : 29;
-    $monday_of_week = _find_day_of_week("$year1-01-01");
-
-    $day1 = ($monday_of_week < 4) ? (($week1 - 1) * 7)-($monday_of_week-1) : (($week1) * 7)-($monday_of_week-1);
-
-    $month1 = 0;
-    while(($day1 - $lastday[$month1]) > 0 ) {
-      $day1 -= $lastday[$month1];
-      $month1++;
-    }
-    $month1 += 1;
-    $count = $day1;
-
-    $datepick1 = sprintf('%04d-%02d-%02d', $year1, $month1, $day1);
-
-    my ($year2, $month2, $day2) = ($year1, $month1, $day1);
-    if($day2 > ($lastday[ $month2 - 1 ]-6)){
-      if($month1 == 12){
-        $month2 = 1;
-        $year2++;
-      }
-      else{
-        $month2++;
-      }  
-      $day2 = 6-($lastday[ $month2 - 1 ] - $day2);
-    }
-    else{
-      $day2 += 6;
-    }
-
-    $datepick2 = sprintf('%04d-%02d-%02d', $year2, $month2, $day2);
-    $date_str         = $datepick1 . '/' . $datepick2;
-    
-
-  }
-  else{
-    $checked_month = "";
-    $checked_week = "checked";
-    $lastday[1] = ($year1 % 4) ? 28 : 29;
-    ($year1, $month1, $day1) = split '-', $DATE;  
-    $dateform_month = "$year1-$month1";
-    $dateform_week = ($month1 > 7 ) ? int(((_period_days("$year1-01-01",$DATE))/7)+1) : 1;
-    $dateform_week = "$year1-W$dateform_week";
-  }
-  $html->tpl_show(_include("calendar", "Timetracker"), { DATE_MONTH => $dateform_month, DATE_WEEK => $dateform_week, CHEKED_STATISTICS => $checked_select_statistics, CHEKED_NOTFULLCALENDAR => $checked_select_notfull_calendar, CHEKED_FULLCALENDAR => $checked_select_full_calendar, CHEKED_STATISTICS => $checked_select_statistics, MONTH => $checked_month, WEEK => $checked_week});
-
- 
-  my $Timetracker_list = $Timetracker->listfortimetracker({ COLS_NAME => 1, DATE => $date_str });
-
-  
-  my $create_date;
-  my $names = "";
-  my $support = "";
-  my $sprint = "";
-  my $osbb = "";
-  my $count_for_week = 1;
-  my $while_lastday;
-  my $day_of_week;
-  my $table;
-
-  if($FORM{radioform} eq "month"){
-    $while_lastday = $lastday[ $month1 - 1 ]+1;
-  }
-  elsif($FORM{radioform} eq "week"){
-
-    $while_lastday = ($lastday[ $month1 - 1 ] < $count+7) ? (($count+7)-$lastday[ $month1 - 1 ]) : ($count+7);
-    
-  }
-
-  if($FORM{timetracker_type} eq "full_calendar" || $FORM{timetracker_type} eq "notfull_calendar") {
-
-     # _bp("1", $Timetracker_list,);
-  foreach my $item (@$Timetracker_list) {
-    $hash{ $item->{date} }->{ $item->{name} }->{support} = $item->{num1};
-    $hash{ $item->{date} }->{ $item->{name} }->{sprint}  = $item->{num2};
-    $hash{ $item->{date} }->{ $item->{name} }->{osbb}    = $item->{num3};
-
-  }
-  # _bp("1", [%hash],);
-
-  $table = $html->table(
-    {
-      width   => "100%",
-      caption => "TIMETRACKER",
-      title   => [ "DAY", "DOF", "Name","Support", "Sprint", "OSBB", ],
-      qs      => $pages_qs,
-      ID      => "TABLE_ID",
-      export  => 1
-    }
-  );
-
-    while ($count != $while_lastday ) {
-
-     $create_date = sprintf('%04d-%02d-%02d', $year1, $month1, $count);
-     
-
-    foreach my $data (sort keys %hash) {
-      foreach my $name (sort keys %{ $hash{$data} }) {
-        if ($data eq $create_date) {
-
-          $names .= ( $names ) ? "<br>$name" : "$name";
-          $support .= ( $support ne "" ) ? "<br>$hash{$data}->{$name}->{support}" : "$hash{$data}->{$name}->{support}";
-          $sprint .= ( $sprint ne "" ) ? "<br>$hash{$data}->{$name}->{sprint}" : "$hash{$data}->{$name}->{sprint}";
-          $osbb .= ( $osbb ne "" ) ? "<br>$hash{$data}->{$name}->{osbb}" : "$hash{$data}->{$name}->{osbb}";
-
+    if ($FORM{"NAMEADD"}) {
+      $Timetracker->add(
+        {
+          NAME => $FORM{NAMEADD},
+          NUM1 => $FORM{SUPPORT},
+          NUM2 => $FORM{SPRINT},
+          NUM3 => $FORM{OSBB},
+          DATE => $FORM{DATE},
         }
-        
+      );
+
+      $html->message("info", $lang{ADD_MASSAGE}, $lang{OPERATION});
+      $date_for_picker = $FORM{DATE};
+    }
+    elsif ($FORM{delete}) {
+      $Timetracker->del($FORM{delete});
+
+      $html->message("info", $lang{DELETE_MASSAGE}, $lang{OPERATION});
+    }
+
+    $html->tpl_show(_include("timetracker_add_form", "Timetracker"), { ADMIN => $admin->{A_FIO}, DATEPICKER => $html->form_datepicker("DATE", $date_for_picker) });
+
+    my $table = $html->table(
+      {
+        width   => "100%",
+        caption => $lang{ALL_FILLING},
+        title   => [ $lang{DATE}, $lang{SUPPORT_TIMETRACK}, $lang{SPRINT_TIMETRACK}, $lang{OSBB}, "" ],
+        qs      => $pages_qs,
+        ID      => "TABLE_ID",
+        export  => 1
       }
+    );
+
+    my $Timetracker_list = $Timetracker->list({ COLS_NAME => 1, DESC => "desc", NAME => $admin->{A_FIO} });
+
+    foreach my $item (@$Timetracker_list) {
+      my $del_button = $html->button("", "index=$index&delete=$item->{id}", { class => "text-danger", ADD_ICON => "glyphicon glyphicon-trash" });
+      $table->addrow($item->{date},, $item->{num1}, $item->{num2}, $item->{num3}, $del_button);
     }
 
-    $day_of_week = _find_day_of_week($create_date);
-    if ($names) {
-      $table->addrow($count, $daysofw[$day_of_week], $names, $support, $sprint, $osbb);   
-    }
-    elsif($FORM{timetracker_type} eq "full_calendar"){
-      $table->addrow($count, $daysofw[$day_of_week], " ", " ", " ", " ");
-      
-    }
+    print $table->show();
 
-
-    if($count == $lastday[ $month1 - 1 ] && $FORM{radioform} eq "week") {
-      $count = 1;
-      $month1++;
-    }
-    else{
-      $count++;
-    }
-
-
-    $names = "";
-    $support = "";
-    $sprint = "";
-    $osbb = "";
-   }    
-  print $table->show();
   }
-  elsif($FORM{timetracker_type} eq "statistics") {
+  else {
 
-    $table = $html->table(
-    {
-      width   => "100%",
-      caption => "TIMETRACKER",
-      title   => [ "Name","Support", "Sprint", "OSBB", "%"],
-      qs      => $pages_qs,
-      ID      => "TABLE_ID",
-      export  => 1
-    }
-  );
-   
-  foreach my $item (@$Timetracker_list) {
-        
-        $hash{ $item->{name} }->{support} += $item->{num1};
-        $hash{ $item->{name} }->{sprint}  += $item->{num2};
-        $hash{ $item->{name} }->{osbb}    += $item->{num3};
+    reports({ DATE => $FORM{FROM_DATE_TO_DATE}, PERIOD_FORM => 1, NO_GROUP => 1, NO_TAGS => 1, DATE_RANGE => 1 });
+
+    my %hash             = ();
+    my $Timetracker_list = $Timetracker->listfortimetracker({ COLS_NAME => 1, DATE => $FORM{FROM_DATE_TO_DATE} });
+
+    my $table = $html->table(
+      {
+        width   => "100%",
+        caption => $lang{TIMETRACKER},
+        title   => [ $lang{NAME}, $lang{SUPPORT_TIMETRACK}, $lang{SPRINT_TIMETRACK}, $lang{OSBB}, $lang{COEFFICIENT} ],
+        qs      => $pages_qs,
+        ID      => "TABLE_ID",
+        MENU    => "$lang{ADD}:index=$index&add_form=1&$pages_qs:add",
+        export  => 1,
       }
-  
-    
+    );
 
-  my $coefficient;
-  foreach my $item (sort keys %hash){
-    $coefficient = sprintf('%0.1f', (($hash{ $item }->{support} * 100) / ($hash{ $item }->{support} + $hash{ $item }->{sprint} + $hash{ $item }->{osbb})));
-    $table->addrow($item, $hash{ $item }->{support}, $hash{ $item }->{sprint}, $hash{ $item }->{osbb}, $coefficient); 
-  }
+    foreach my $item (@$Timetracker_list) {
 
-  print $table->show();
-  }
-
-
-}
-
-
-
-sub _add_years {
-  my ($date, $d_year) = @_;
-  my ($year, $month, $day) = split '-', $date;
-
-  $year += $d_year;
-
-  $day = 28 if ($month == 2 && $day == 29 && ($year % 4));
-
-  return sprintf('%04d-%02d-%02d', $year, $month, $day);
-}
-
-sub _add_days {
-  my @lastday = (31,28,31,30,31,30,31,31,30,31,30,31);
-  my ($date, $d_days) = @_;
-  my ($year, $month, $day) = split '-', $date;
-  
-  $lastday[1] = ($year % 4) ? 28 : 29;
-  $day += $d_days;
-
-  while ($day > $lastday[$month-1]) {
-    $day -= $lastday[$month-1];
-    $month++;
-    if ($month > 12) {
-      $year++;
-      $month = 1;
-      $lastday[1] = ($year % 4) ? 28 : 29;
+      $hash{ $item->{name} }->{support} += $item->{num1};
+      $hash{ $item->{name} }->{sprint}  += $item->{num2};
+      $hash{ $item->{name} }->{osbb}    += $item->{num3};
     }
-  }
 
-  while ($day < 1) {
-    $month--;
-    if ($month == 0) {
-      $year--;
-      $month = 12;
-      $lastday[1] = ($year % 4) ? 28 : 29;
+    my $coefficient;
+    foreach my $item (sort keys %hash) {
+      $coefficient = sprintf('%0.1f', (($hash{$item}->{support} * 100) / ($hash{$item}->{support} + $hash{$item}->{sprint} + $hash{$item}->{osbb})));
+      $table->addrow($item, $hash{$item}->{support}, $hash{$item}->{sprint}, $hash{$item}->{osbb}, $coefficient);
     }
-    $day += $lastday[$month-1];
+
+    print $table->show();
+
   }
 
-  return sprintf('%04d-%02d-%02d', $year, $month, $day);
-}
-
-sub _period_days {
-  my @lastday = (31,28,31,30,31,30,31,31,30,31,30,31);
-  my ($s_date, $e_date) = @_;
-  my ($s_year, $s_month, $s_day) = split '-', $s_date;
-  my ($e_year, $e_month, $e_day) = split '-', $e_date;
-  
-  $lastday[1] = ($e_year % 4) ? 28 : 29;
-  
-  while ($e_year > $s_year || $e_month > $s_month ) {
-    $e_month--;
-    if ($e_month == 0) {
-      $e_year--;
-      $e_month = 12;
-      $lastday[1] = ($e_year % 4) ? 28 : 29;
-    }
-    $e_day += $lastday[$e_month-1]
-  }
-
-  return $e_day - $s_day;
-}
-
-sub _find_day_of_week{
-my($date) = @_;
-
-my $day = _period_days('1996-01-01',$date)%7;
-# print " days = ";
-# print _period_days('2017-08-07',$date);
-
-return $day;
 }

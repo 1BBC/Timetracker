@@ -1,8 +1,5 @@
 #Iner_ID : Main or Sub or if -1 user menu func list
 %FUNCTIONS_LIST = (
-  "01:0:Timetracker:null:"             => 5,
-  "02:1:timetracker:timetracker:" 	   => 5,
-  "03:1:addnewitem_main:add_main:"     => 5,
-  "03:1:addnewitem:add:"               => 5,
-  "04:1:calendartracker:calendar:"     => 5,
+  "01:0:$lang{TIMETRACKER}:null:"        => 5,
+  "02:1:$lang{TIMETRACKER}:timetracker:" => 5,
 );
