@@ -104,7 +104,7 @@ sub timetracker {
 
     my $coefficient;
     foreach my $item (sort keys %hash) {
-      $coefficient = sprintf('%0.1f', (($hash{$item}->{support} * 100) / ($hash{$item}->{support} + $hash{$item}->{sprint} + $hash{$item}->{osbb})));
+      $coefficient = sprintf('%0.1f', (($hash{$item}->{sprint} * 100) / ($hash{$item}->{support} + $hash{$item}->{sprint} + $hash{$item}->{osbb})));
       $table->addrow($item, $hash{$item}->{support}, $hash{$item}->{sprint}, $hash{$item}->{osbb}, $coefficient);
     }
 
