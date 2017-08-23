@@ -43,15 +43,33 @@ sub add{
   return $self;
 }
 
+sub add_element{
+  my $self = shift;
+  my ($attr) = @_;
+
+  $self->query_add( 'timetracker_element', $attr );
+
+  return $self;
+}
+
 #**********************************************************
 # Delete user info from all tables
 # del(attr);
 #**********************************************************
 sub del{
   my $self = shift;
+  my ($attr) = @_;
+
+  $self->query_del( 'timetracker', undef, $attr );
+
+  return $self->{result};
+}
+
+sub del_element{
+  my $self = shift;
   my ($id) = @_;
 
-  $self->query_del( 'timetracker', { ID => $id } );
+  $self->query_del( 'timetracker_element', { ID => $id } );
 
   return $self->{result};
 }
@@ -90,6 +108,32 @@ sub list{
   return $self->{list};
 }
 
+sub list_element{
+  my $self = shift;
+  my ($attr) = @_;
+
+  my $SORT = ($attr->{SORT}) ? $attr->{SORT} : 1;
+  my $DESC = ($attr->{DESC}) ? $attr->{DESC} : '';
+  #my $PG        = ($attr->{PG})        ? $attr->{PG}             : 0;
+  #my $PAGE_ROWS = ($attr->{PAGE_ROWS}) ? int($attr->{PAGE_ROWS}) : 25;
+
+  # my $WHERE = $self->search_former( $attr, [
+  #     [ 'ID', 'INT', 'id', 1],
+  #     [ 'ELEMENT', 'STR', 'element', 1 ],      
+  #   ],
+  #   { WHERE => 1,
+  #   }
+  # );
+
+  $self->query2( "SELECT id, element, priority
+     FROM timetracker_element ORDER BY $SORT $DESC;",
+    undef,
+    {COLS_NAME => 1}
+  );
+
+  return $self->{list};
+}
+
 #**********************************************************
 # list()
 #**********************************************************
@@ -104,17 +148,15 @@ sub listfortimetracker{
 
   my $WHERE = $self->search_former( $attr, [
       [ 'NAME', 'STR', 'name', 1 ],
-      [ 'NUM1', 'int', 'num1', 1 ],
-      [ 'NUM2', 'int', 'num2', 1 ],
-      [ 'NUM3', 'int', 'num3', 1 ],
-      [ 'ID', 'INT', 'id', ],
+      [ 'ELEMENT', 'int', 'element', 1 ],
+      [ 'NUM_ELEMENT', 'int', 'num_element', 1 ],
       [ 'DATE', 'DATE', 'date', 1 ],
     ],
     { WHERE => 1,
     }
   );
 
-  $self->query2( "SELECT id, name, num1, num2, num3, date
+  $self->query2( "SELECT name, element, num_element, date
      FROM timetracker
      $WHERE;",
     undef,
@@ -123,3 +165,40 @@ sub listfortimetracker{
 
   return $self->{list};
 }
+
+#**********************************************************
+# tariff_change()
+#**********************************************************
+sub change_element{
+  my $self = shift;
+  my ($attr) = @_;
+
+  $self->changes2(
+    {
+      CHANGE_PARAM => 'ID',
+      TABLE        => 'timetracker_element',
+      DATA         => $attr,
+    }
+  );
+
+  return $self->{result};
+}
+
+#**********************************************************
+# tariff_change()
+#**********************************************************
+# sub change{
+#   my $self = shift;
+#   my ($attr) = @_;
+#   print "Timetracker.pm";
+#   $self->changes2(
+#     {
+#       CHANGE_PARAM => undef,
+#       SECOND_PARAM => 'NAME', 'DATE'
+#       TABLE        => 'timetracker',
+#       DATA         => $attr,
+#     }
+#   );
+
+#   return $self->{result};
+# }
