@@ -28,7 +28,7 @@ sub timetracker {
 
   my %hash                     = ();
   my @element                  = ();
-  my $Timetracker_list         = $Timetracker->listfortimetracker({ COLS_NAME => 1, DATE => $FORM{FROM_DATE_TO_DATE} });
+  my $Timetracker_list         = $Timetracker->list_for_timetracker({ COLS_NAME => 1, DATE => $FORM{FROM_DATE_TO_DATE} });
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1 });
   my @priority                 = ();
 
@@ -163,7 +163,12 @@ sub add_time {
     $html->message("info", $lang{CHANGE_MASSAGE}, $lang{OPERATION});
   }
 
-  my $Timetracker_list = $Timetracker->listfortimetracker({ COLS_NAME => 1, DATE => $FORM{FROM_DATE_TO_DATE},, DESC => "desc", NAME => $admin->{A_FIO} });
+  my $Timetracker_list = $Timetracker->list_for_timetracker({ 
+    COLS_NAME => 1, 
+    DATE      => $FORM{FROM_DATE_TO_DATE}, 
+    DESC      => "desc", 
+    NAME      => $admin->{A_FIO} });
+
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
 
   if ($FORM{EDIT}) {
@@ -184,13 +189,23 @@ sub add_time {
 
   foreach my $element (@$Timetracker_list_element) {
 
-    $form_group .= $html->tpl_show(_include("timetracker_add_form_group", "Timetracker"), { ELEMENT => $element->{element}, ID => $element->{id}, NUM_ELEMENT => $hash1{ $element->{id} } }, { OUTPUT2RETURN => 1 });
+    $form_group .= $html->tpl_show(_include("timetracker_add_form_group", "Timetracker"), { 
+      ELEMENT         => $element->{element}, 
+      ID              => $element->{id}, 
+      NUM_ELEMENT     => $hash1{ $element->{id} } }, 
+      { OUTPUT2RETURN => 1 });
+
     push @element,    $element->{element};
     push @element_id, $element->{id};
 
   }
 
-  $html->tpl_show(_include("timetracker_add_form", "Timetracker"), { ADMIN => $admin->{A_FIO}, DATEPICKER => $html->form_datepicker("DATE", $date_for_picker), FORM_GROUP => $form_group, BTN => $btn_value, ACTION => $btn_action });
+  $html->tpl_show(_include("timetracker_add_form", "Timetracker"), { 
+    ADMIN      => $admin->{A_FIO}, 
+    DATEPICKER => $html->form_datepicker("DATE", $date_for_picker), 
+    FORM_GROUP => $form_group, 
+    BTN        => $btn_value, 
+    ACTION     => $btn_action });
 
   my $table = $html->table(
     {
@@ -270,13 +285,26 @@ sub add_item {
     $btn_value  = $lang{CHANGE};
     foreach my $item (@$Timetracker_list_element) {
       if ($item->{id} == $FORM{EDIT}) {
-        $html->tpl_show(_include("timetracker_add_item_form", "Timetracker"), { FORM_NAME => "EDIT_ITEM", TITLE => $lang{EDIT_ITEM}, BTN => $btn_value, ACTION => $btn_action, ID => $item->{id}, PRIORITY => $item->{priority}, ELEMENT => $item->{element} });
+
+        $html->tpl_show(_include("timetracker_add_item_form", "Timetracker"), { 
+          FORM_NAME => "EDIT_ITEM", 
+          TITLE => $lang{EDIT_ITEM}, 
+          BTN => $btn_value, 
+          ACTION => $btn_action, 
+          ID => $item->{id}, 
+          PRIORITY => $item->{priority}, 
+          ELEMENT => $item->{element} });
         last;
       }
+
     }
   }
   else {
-    $html->tpl_show(_include("timetracker_add_item_form", "Timetracker"), { FORM_NAME => "ADD_ITEM", TITLE => $lang{ADD_ITEM}, BTN => $btn_value, ACTION => $btn_action });
+    $html->tpl_show(_include("timetracker_add_item_form", "Timetracker"), { 
+      FORM_NAME => "ADD_ITEM", 
+      TITLE => $lang{ADD_ITEM}, 
+      BTN => $btn_value, 
+      ACTION => $btn_action });
   }
 
   my $table = $html->table(

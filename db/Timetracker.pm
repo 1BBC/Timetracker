@@ -26,13 +26,12 @@ sub new{
   $self->{conf} = $CONF;
 
   return $self;
-
 }
 
-
-
 #**********************************************************
-# add()
+=head2  add()
+
+=cut
 #**********************************************************
 sub add{
   my $self = shift;
@@ -43,6 +42,11 @@ sub add{
   return $self;
 }
 
+#**********************************************************
+=head2  add()
+
+=cut
+#**********************************************************
 sub add_element{
   my $self = shift;
   my ($attr) = @_;
@@ -53,8 +57,9 @@ sub add_element{
 }
 
 #**********************************************************
-# Delete user info from all tables
-# del(attr);
+=head2  add() - Delete user info from all tables
+
+=cut
 #**********************************************************
 sub del{
   my $self = shift;
@@ -65,6 +70,11 @@ sub del{
   return $self->{result};
 }
 
+#**********************************************************
+=head2  add() - Delete element
+
+=cut
+#**********************************************************
 sub del_element{
   my $self = shift;
   my ($id) = @_;
@@ -75,7 +85,9 @@ sub del_element{
 }
 
 #**********************************************************
-# list()
+=head2 list($attr) - list bill accounts
+
+=cut
 #**********************************************************
 sub list{
   my $self = shift;
@@ -108,6 +120,11 @@ sub list{
   return $self->{list};
 }
 
+#**********************************************************
+=head2 list($attr) - list for element
+
+=cut
+#**********************************************************
 sub list_element{
   my $self = shift;
   my ($attr) = @_;
@@ -135,9 +152,11 @@ sub list_element{
 }
 
 #**********************************************************
-# list()
+=head2 list($attr) - list for timetracker
+
+=cut
 #**********************************************************
-sub listfortimetracker{
+sub list_for_timetracker{
   my $self = shift;
   my ($attr) = @_;
 
@@ -167,7 +186,9 @@ sub listfortimetracker{
 }
 
 #**********************************************************
-# tariff_change()
+=head2 change($attr) -  Change element
+
+=cut
 #**********************************************************
 sub change_element{
   my $self = shift;
@@ -183,22 +204,3 @@ sub change_element{
 
   return $self->{result};
 }
-
-#**********************************************************
-# tariff_change()
-#**********************************************************
-# sub change{
-#   my $self = shift;
-#   my ($attr) = @_;
-#   print "Timetracker.pm";
-#   $self->changes2(
-#     {
-#       CHANGE_PARAM => undef,
-#       SECOND_PARAM => 'NAME', 'DATE'
-#       TABLE        => 'timetracker',
-#       DATA         => $attr,
-#     }
-#   );
-
-#   return $self->{result};
-# }
