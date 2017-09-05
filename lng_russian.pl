@@ -22,4 +22,7 @@ $lang{PRIORITY} = "Приоритет";
 $lang{ELEMENTS} = "Элементы";
 $lang{ELEMENT} = "Элемент";
 
+$lang{NOTABLES} = "Таблиц не обнаружено";
+$lang{ERROR} = "Ошибка";
+
 

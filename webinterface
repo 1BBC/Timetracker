@@ -189,6 +189,11 @@ sub add_time {
 
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
 
+  if($Timetracker->{errno}){
+    $html->message("err", $lang{ERROR}, $lang{NOTABLES});
+    return 1;
+  }
+
   if ($FORM{EDIT}) {
     $btn_action      = 'CHANGE';
     $btn_value       = $lang{CHANGE};
@@ -305,6 +310,11 @@ sub add_item {
   }
 
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
+
+  if($Timetracker->{errno}){
+    $html->message("err", $lang{ERROR}, $lang{NOTABLES});
+    return 1;
+  }
 
   if ($FORM{EDIT}) {
     $btn_action = 'CHANGE';

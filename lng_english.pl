@@ -21,3 +21,6 @@ $lang{NEW_ITEM} = "New item";
 $lang{PRIORITY} = "Priority";
 $lang{ELEMENTS} = "Elements";
 $lang{ELEMENT} = "Element";
+
+$lang{NOTABLES} = "No tables found";
+$lang{ERROR} = "Error";

@@ -21,3 +21,6 @@ $lang{NEW_ITEM} = "Новий елемент";
 $lang{PRIORITY} = "Пріоритет";
 $lang{ELEMENTS} = "Елементи";
 $lang{ELEMENT} = "Елемент";
+
+$lang{NOTABLES} = "Таблиць не виявлено";
+$lang{ERROR} = "Помилка";
