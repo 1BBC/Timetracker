@@ -13,184 +13,163 @@ my $MODULE = 'Timetracker';
 #**********************************************************
 # Init
 #**********************************************************
-sub new{
+sub new {
   my $class = shift;
   my ($db, $admin, $CONF) = @_;
 
-  my $self = { };
-  bless( $self, $class );
+  my $self = {};
+  bless($self, $class);
 
   $admin->{MODULE} = $MODULE;
-  $self->{db} = $db;
-  $self->{admin} = $admin;
-  $self->{conf} = $CONF;
+  $self->{db}      = $db;
+  $self->{admin}   = $admin;
+  $self->{conf}    = $CONF;
 
   return $self;
 }
 
 #**********************************************************
+
 =head2  add()
 
 =cut
+
 #**********************************************************
-sub add{
+sub add {
   my $self = shift;
   my ($attr) = @_;
 
-  $self->query_add( 'timetracker', $attr );
+  $self->query_add('timetracker', $attr);
 
   return $self;
 }
 
 #**********************************************************
-=head2  add()
+
+=head2  add_element()
 
 =cut
+
 #**********************************************************
-sub add_element{
+sub add_element {
   my $self = shift;
   my ($attr) = @_;
 
-  $self->query_add( 'timetracker_element', $attr );
+  $self->query_add('timetracker_element', $attr);
 
   return $self;
 }
 
 #**********************************************************
-=head2  add() - Delete user info from all tables
+
+=head2  del() - Delete user info from all tables
 
 =cut
+
 #**********************************************************
-sub del{
+sub del {
   my $self = shift;
   my ($attr) = @_;
 
-  $self->query_del( 'timetracker', undef, $attr );
+  $self->query_del('timetracker', undef, $attr);
 
   return $self->{result};
 }
 
 #**********************************************************
-=head2  add() - Delete element
+
+=head2  del_element() - Delete element
 
 =cut
+
 #**********************************************************
-sub del_element{
+sub del_element {
   my $self = shift;
   my ($id) = @_;
 
-  $self->query_del( 'timetracker_element', { ID => $id } );
+  $self->query_del('timetracker_element', { ID => $id });
 
   return $self->{result};
 }
 
 #**********************************************************
-=head2 list($attr) - list bill accounts
+
+=head2 list_element($attr) - list for element
 
 =cut
+
 #**********************************************************
-sub list{
+sub list_element {
   my $self = shift;
   my ($attr) = @_;
 
   my $SORT = ($attr->{SORT}) ? $attr->{SORT} : 1;
   my $DESC = ($attr->{DESC}) ? $attr->{DESC} : '';
-  #my $PG        = ($attr->{PG})        ? $attr->{PG}             : 0;
-  #my $PAGE_ROWS = ($attr->{PAGE_ROWS}) ? int($attr->{PAGE_ROWS}) : 25;
 
-  my $WHERE = $self->search_former( $attr, [
-      [ 'ID', 'INT', 'id', 1],
-      [ 'NAME', 'STR', 'name', 1 ],
-      [ 'NUM1', 'int', 'num1', 1 ],
-      [ 'NUM2', 'int', 'num2', 1 ],
-      [ 'NUM3', 'int', 'num3', 1 ],
-      [ 'DATE', 'DATE', 'date', 1 ],
-      
-    ],
-    { WHERE => 1,
-    }
-  );
-
-  $self->query2( "SELECT id, name, num1, num2, num3, date
-     FROM timetracker $WHERE ORDER BY $SORT $DESC;",
-    undef,
-    {COLS_NAME => 1}
-  );
-
-  return $self->{list};
-}
-
-#**********************************************************
-=head2 list($attr) - list for element
-
-=cut
-#**********************************************************
-sub list_element{
-  my $self = shift;
-  my ($attr) = @_;
-
-  my $SORT = ($attr->{SORT}) ? $attr->{SORT} : 1;
-  my $DESC = ($attr->{DESC}) ? $attr->{DESC} : '';
   #my $PG        = ($attr->{PG})        ? $attr->{PG}             : 0;
   #my $PAGE_ROWS = ($attr->{PAGE_ROWS}) ? int($attr->{PAGE_ROWS}) : 25;
 
   # my $WHERE = $self->search_former( $attr, [
   #     [ 'ID', 'INT', 'id', 1],
-  #     [ 'ELEMENT', 'STR', 'element', 1 ],      
+  #     [ 'ELEMENT', 'STR', 'element', 1 ],
   #   ],
   #   { WHERE => 1,
   #   }
   # );
 
-  $self->query2( "SELECT id, element, priority
+  $self->query2(
+    "SELECT id, element, priority
      FROM timetracker_element ORDER BY $SORT $DESC;",
     undef,
-    {COLS_NAME => 1}
+    { COLS_NAME => 1 }
   );
 
   return $self->{list};
 }
 
 #**********************************************************
-=head2 list($attr) - list for timetracker
+
+=head2 list_for_timetracker ($attr) - list for timetracker
 
 =cut
+
 #**********************************************************
-sub list_for_timetracker{
+sub list_for_timetracker {
   my $self = shift;
   my ($attr) = @_;
 
   my $SORT = ($attr->{SORT}) ? $attr->{SORT} : 1;
   my $DESC = ($attr->{DESC}) ? $attr->{DESC} : '';
+
   #my $PG        = ($attr->{PG})        ? $attr->{PG}             : 0;
   #my $PAGE_ROWS = ($attr->{PAGE_ROWS}) ? int($attr->{PAGE_ROWS}) : 25;
 
-  my $WHERE = $self->search_former( $attr, [
-      [ 'NAME', 'STR', 'name', 1 ],
-      [ 'ELEMENT', 'int', 'element', 1 ],
-      [ 'NUM_ELEMENT', 'int', 'num_element', 1 ],
-      [ 'DATE', 'DATE', 'date', 1 ],
-    ],
-    { WHERE => 1,
-    }
-  );
+  my $WHERE = $self->search_former($attr, [ 
+    [ 'AID', 'STR', 'aid', 1 ], 
+    [ 'ELEMENT_ID', 'int', 'element_id', 1 ], 
+    [ 'TIME_PER_ELEMENT', 'int', 'time_per_element', 1 ], 
+    [ 'DATE', 'DATE', 'date', 1 ], ], 
+    { WHERE => 1, });
 
-  $self->query2( "SELECT name, element, num_element, date
+  $self->query2(
+    "SELECT aid, element_id, time_per_element, date
      FROM timetracker
      $WHERE;",
     undef,
-    {COLS_NAME => 1}
+    { COLS_NAME => 1 }
   );
 
   return $self->{list};
 }
 
 #**********************************************************
-=head2 change($attr) -  Change element
+
+=head2 change_elementS($attr) -  Change element
 
 =cut
+
 #**********************************************************
-sub change_element{
+sub change_element {
   my $self = shift;
   my ($attr) = @_;
 

@@ -10,6 +10,8 @@ our ($html, %FORM, $db, %conf, $admin, %lang);
 
 use Timetracker::db::Timetracker;
 my $Timetracker = Timetracker->new($db, $admin, \%conf);
+use Admins;
+my $Admins = Admins->new($db, \%conf);
 
 use Data::Dumper;
 use strict;
@@ -30,7 +32,8 @@ sub timetracker {
   my @element                  = ();
   my $Timetracker_list         = $Timetracker->list_for_timetracker({ COLS_NAME => 1, DATE => $FORM{FROM_DATE_TO_DATE} });
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1 });
-  my @priority                 = ();
+  my $Admin_name;
+  my @priority = ();
 
   foreach my $element (@$Timetracker_list_element) {
 
@@ -42,12 +45,14 @@ sub timetracker {
 
     foreach my $item (@$Timetracker_list) {
 
-      if ($element->{id} == $item->{element}) {
+      $Admin_name = $Admins->info($item->{aid});
 
-        $hash{ $item->{name} }->{ $element->{element} } += $item->{num_element};
+      if ($element->{id} == $item->{element_id}) {
+
+        $hash{ $Admin_name->{A_FIO} }->{ $element->{element} } += $item->{time_per_element};
       }
       else {
-        $hash{ $item->{name} }->{ $element->{element} } += 0;
+        $hash{ $Admin_name->{A_FIO} }->{ $element->{element} } += 0;
       }
     }
   }
@@ -67,6 +72,7 @@ sub timetracker {
   my $coefficient;
   my @num_element;
   my $sum_num_element;
+
   foreach my $name (sort keys %hash) {
 
     @num_element     = ();
@@ -113,14 +119,22 @@ sub add_time {
   my %hash1;
 
   if ($FORM{ADD}) {
+
+    $Timetracker->del(
+      {
+        AID  => $admin->{AID},
+        DATE => $FORM{DATE},
+      }
+    );
+
     foreach my $element (@$Timetracker_list_element) {
 
       $Timetracker->add(
         {
-          NAME        => $FORM{NAME},
-          ELEMENT     => $element->{id},
-          NUM_ELEMENT => $FORM{ $element->{id} },
-          DATE        => $FORM{DATE},
+          AID              => $admin->{AID},
+          ELEMENT_ID       => $element->{id},
+          TIME_PER_ELEMENT => $FORM{ $element->{id} },
+          DATE             => $FORM{DATE},
         }
       );
 
@@ -131,9 +145,10 @@ sub add_time {
   }
 
   if ($FORM{DELETE}) {
+
     $Timetracker->del(
       {
-        NAME => $FORM{NAME},
+        AID  => $admin->{AID},
         DATE => $FORM{DELETE},
       }
     );
@@ -143,7 +158,7 @@ sub add_time {
 
     $Timetracker->del(
       {
-        NAME => $FORM{NAME},
+        AID  => $admin->{AID},
         DATE => $FORM{DATE},
       }
     );
@@ -152,10 +167,10 @@ sub add_time {
 
       $Timetracker->add(
         {
-          NAME        => $FORM{NAME},
-          ELEMENT     => $element->{id},
-          NUM_ELEMENT => $FORM{ $element->{id} },
-          DATE        => $FORM{DATE},
+          AID              => $admin->{AID},
+          ELEMENT_ID       => $element->{id},
+          TIME_PER_ELEMENT => $FORM{ $element->{id} },
+          DATE             => $FORM{DATE},
         }
       );
     }
@@ -163,11 +178,14 @@ sub add_time {
     $html->message("info", $lang{CHANGE_MASSAGE}, $lang{OPERATION});
   }
 
-  my $Timetracker_list = $Timetracker->list_for_timetracker({ 
-    COLS_NAME => 1, 
-    DATE      => $FORM{FROM_DATE_TO_DATE}, 
-    DESC      => "desc", 
-    NAME      => $admin->{A_FIO} });
+  my $Timetracker_list = $Timetracker->list_for_timetracker(
+    {
+      COLS_NAME => 1,
+      DATE      => $FORM{FROM_DATE_TO_DATE},
+      DESC      => "desc",
+      AID       => $admin->{AID}
+    }
+  );
 
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
 
@@ -179,9 +197,9 @@ sub add_time {
 
       foreach my $item (@$Timetracker_list) {
 
-        if ($item->{name} eq $FORM{NAME} && $item->{date} eq $FORM{EDIT}) {
+        if ($item->{aid} eq $FORM{NAME} && $item->{date} eq $FORM{EDIT}) {
 
-          $hash1{ $item->{element} } = $item->{num_element};
+          $hash1{ $item->{element_id} } = $item->{time_per_element};
         }
       }
     }
@@ -189,29 +207,37 @@ sub add_time {
 
   foreach my $element (@$Timetracker_list_element) {
 
-    $form_group .= $html->tpl_show(_include("timetracker_add_form_group", "Timetracker"), { 
-      ELEMENT         => $element->{element}, 
-      ID              => $element->{id}, 
-      NUM_ELEMENT     => $hash1{ $element->{id} } }, 
-      { OUTPUT2RETURN => 1 });
+    $form_group .= $html->tpl_show(
+      _include("timetracker_add_form_group", "Timetracker"),
+      {
+        ELEMENT     => $element->{element},
+        ID          => $element->{id},
+        NUM_ELEMENT => $hash1{ $element->{id} }
+      },
+      { OUTPUT2RETURN => 1 }
+    );
 
     push @element,    $element->{element};
     push @element_id, $element->{id};
 
   }
 
-  $html->tpl_show(_include("timetracker_add_form", "Timetracker"), { 
-    ADMIN      => $admin->{A_FIO}, 
-    DATEPICKER => $html->form_datepicker("DATE", $date_for_picker), 
-    FORM_GROUP => $form_group, 
-    BTN        => $btn_value, 
-    ACTION     => $btn_action });
+  $html->tpl_show(
+    _include("timetracker_add_form", "Timetracker"),
+    {
+      ADMIN      => $admin->{AID},
+      DATEPICKER => $html->form_datepicker("DATE", $date_for_picker),
+      FORM_GROUP => $form_group,
+      BTN        => $btn_value,
+      ACTION     => $btn_action
+    }
+  );
 
   my $table = $html->table(
     {
       width   => "100%",
       caption => $lang{ALL_FILLING},
-      title   => [ $lang{DATE}, @element, "", "" ],
+      title   => [ $lang{DATE}, @element, "" ],
       qs      => $pages_qs,
       ID      => "TABLE_ID",
       export  => 1
@@ -219,7 +245,7 @@ sub add_time {
   );
 
   foreach my $item (@$Timetracker_list) {
-    $hash{ $item->{date} }->{ $item->{element} } = $item->{num_element};
+    $hash{ $item->{date} }->{ $item->{element_id} } = $item->{time_per_element};
   }
 
   foreach my $date (reverse sort keys %hash) {
@@ -227,9 +253,9 @@ sub add_time {
     foreach my $item (@element_id) {
       push @num_element, ($hash{$date}->{$item} || 0);
     }
-    my $del_button = $html->button("", "index=$index&DELETE=$date&NAME=$admin->{A_FIO}", { class => "text-danger", ADD_ICON => "glyphicon glyphicon-trash" });
-    my $edit_button = $html->button("", "index=$index&EDIT=$date&NAME=$admin->{A_FIO}", { class => "", ADD_ICON => "glyphicon glyphicon-pencil" });
-    $table->addrow($date, @num_element, $edit_button, $del_button);
+    my $del_button  = $html->button("", "index=$index&DELETE=$date&NAME=$admin->{AID}", { class => "text-danger", ADD_ICON => "glyphicon glyphicon-trash" });
+    my $edit_button = $html->button("", "index=$index&EDIT=$date&NAME=$admin->{AID}",   { class => "",            ADD_ICON => "glyphicon glyphicon-pencil" });
+    $table->addrow($date, @num_element, "$edit_button$del_button");
   }
 
   print $table->show();
@@ -286,25 +312,33 @@ sub add_item {
     foreach my $item (@$Timetracker_list_element) {
       if ($item->{id} == $FORM{EDIT}) {
 
-        $html->tpl_show(_include("timetracker_add_item_form", "Timetracker"), { 
-          FORM_NAME => "EDIT_ITEM", 
-          TITLE => $lang{EDIT_ITEM}, 
-          BTN => $btn_value, 
-          ACTION => $btn_action, 
-          ID => $item->{id}, 
-          PRIORITY => $item->{priority}, 
-          ELEMENT => $item->{element} });
+        $html->tpl_show(
+          _include("timetracker_add_item_form", "Timetracker"),
+          {
+            FORM_NAME => "EDIT_ITEM",
+            TITLE     => $lang{EDIT_ITEM},
+            BTN       => $btn_value,
+            ACTION    => $btn_action,
+            ID        => $item->{id},
+            PRIORITY  => $item->{priority},
+            ELEMENT   => $item->{element}
+          }
+        );
         last;
       }
 
     }
   }
   else {
-    $html->tpl_show(_include("timetracker_add_item_form", "Timetracker"), { 
-      FORM_NAME => "ADD_ITEM", 
-      TITLE => $lang{ADD_ITEM}, 
-      BTN => $btn_value, 
-      ACTION => $btn_action });
+    $html->tpl_show(
+      _include("timetracker_add_item_form", "Timetracker"),
+      {
+        FORM_NAME => "ADD_ITEM",
+        TITLE     => $lang{ADD_ITEM},
+        BTN       => $btn_value,
+        ACTION    => $btn_action
+      }
+    );
   }
 
   my $table = $html->table(
@@ -321,7 +355,7 @@ sub add_item {
   foreach my $item (@$Timetracker_list_element) {
     my $del_button  = $html->button("", "index=$index&DELETE=$item->{id}", { class => "text-danger", ADD_ICON => "glyphicon glyphicon-trash" });
     my $edit_button = $html->button("", "index=$index&EDIT=$item->{id}",   { class => "",            ADD_ICON => "glyphicon glyphicon-pencil" });
-    $table->addrow($item->{id}, $item->{element}, $item->{priority}, $edit_button, $del_button);
+    $table->addrow($item->{id}, $item->{element}, $item->{priority}, "$edit_button$del_button");
   }
 
   print $table->show();

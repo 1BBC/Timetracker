@@ -3,7 +3,7 @@
           <div class='box-body'>
                 <form name='RANGE_PICKER' id='form_RANGE_PICKER' method='GET' class='form form-horizontal'>
                 <input type='hidden' name='index' value='$index' />
-                <input  type='hidden' name='NAME' value='%ADMIN%'>
+                <input  type='hidden' name='NAME' value='%AID%'>
                 <input  type='hidden' name='add_form' value='1'>
 
                 %FORM_GROUP%
