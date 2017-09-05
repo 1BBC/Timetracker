@@ -152,6 +152,8 @@ sub add_time {
         DATE => $FORM{DELETE},
       }
     );
+
+    $html->message("info", $lang{DELETE_MASSAGE}, $lang{OPERATION});
   }
 
   if ($FORM{CHANGE}) {
