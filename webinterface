@@ -191,6 +191,15 @@ sub add_time {
 
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
 
+  my $datepicker = $html->form_datepicker("DATE", $date_for_picker);
+  my $datepicker_form = $html->tpl_show(
+      _include("timetracker_datepicker_form", "Timetracker"),
+      {
+        DATEPICKER  => $datepicker,
+      },
+      { OUTPUT2RETURN => 1 }
+    );
+
   if($Timetracker->{errno}){
     $html->message("err", $lang{ERROR}, $lang{NOTABLES});
     return 1;
@@ -199,7 +208,6 @@ sub add_time {
   if ($FORM{EDIT}) {
     $btn_action      = 'CHANGE';
     $btn_value       = $lang{CHANGE};
-    $date_for_picker = $FORM{EDIT};
     foreach my $element (@$Timetracker_list_element) {
 
       foreach my $item (@$Timetracker_list) {
@@ -210,6 +218,7 @@ sub add_time {
         }
       }
     }
+    $datepicker_form = "<input type='hidden' name='DATE' value='$FORM{EDIT}'>";
   }
 
   foreach my $element (@$Timetracker_list_element) {
@@ -228,12 +237,13 @@ sub add_time {
     push @element_id, $element->{id};
 
   }
+  
 
   $html->tpl_show(
     _include("timetracker_add_form", "Timetracker"),
     {
       ADMIN      => $admin->{AID},
-      DATEPICKER => $html->form_datepicker("DATE", $date_for_picker),
+      DATEPICKER => $datepicker_form,
       FORM_GROUP => $form_group,
       BTN        => $btn_value,
       ACTION     => $btn_action
