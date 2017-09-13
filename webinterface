@@ -386,13 +386,10 @@ sub add_item {
 
 sub decomposition {
     my %hash = (
-       Mon  => 1,
-       Tue  => 1,
-       Wed  => 2,
-       Thu  => 1,
-       Fri  => 2,
-       Sat  => 1,
-       Sun  => 1,
+       html  => 1,
+       prel  => 1,
+       sql  => 1,
+       "service api"  => 2,
   );
 
 
@@ -406,27 +403,27 @@ sub decomposition {
   my $balcount;
 
   my $count = 0;
-  while(my($key,$value) = each %hash){
 
+  foreach my $value (sort { $hash{$a} <=> $hash{$b} } keys %hash) {
     $checked = '';
-    if($value == 1) {
+    if($hash{$value} == 1) {
       $label_color = "label-success";
-    }elsif($value == 2){
+    }elsif($hash{$value} == 2){
       $label_color = "label-warning";
-    }elsif($value > 2){
+    }elsif($hash{$value} > 2){
       $label_color = "label-danger";
     }else{
       $label_color = "label-default";
     }
     for (@SwitchOptionCheck) {
     if($_ == $count) {
-      $balcount += $value;
+      $balcount += $hash{$value};
       $checked = 'checked';
     }
   } 
 
-    $checkboxes .= $html->tpl_show(_include("timetracker_decomposition_chekbox", "Timetracker"), { NAME => $key, ID => $count, DIFFICULT => $count, LABEL_COLOR => $label_color, CHECKED => $checked}, { OUTPUT2RETURN => 1 });
-    $totalcount += $value;
+    $checkboxes .= $html->tpl_show(_include("timetracker_decomposition_chekbox", "Timetracker"), { NAME => $value, ID => $count, DIFFICULT => $count, LABEL_COLOR => $label_color, CHECKED => $checked}, { OUTPUT2RETURN => 1 });
+    $totalcount += $hash{$value};
     $count++;
 
   }
