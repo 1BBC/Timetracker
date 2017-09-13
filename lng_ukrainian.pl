@@ -24,3 +24,11 @@ $lang{ELEMENT} = "Елемент";
 
 $lang{NOTABLES} = "Таблиць не виявлено";
 $lang{ERROR} = "Помилка";
+
+$lang{DECOMPOSITION} = 'Декомпозиція задачі';
+$lang{IT_DECOMPOSITION} = 'Декомпозиція';
+$lang{FIBONACHI} = 'Число Фібаначчі';
+$lang{DIFFICULT} = 'Складність';
+$lang{YOUR_FINAL_SCORE} = 'від виконаного завдання';
+$lang{YOURFINAL_SUM} = 'Сума складності';
+$lang{RESULT} = 'Результат';

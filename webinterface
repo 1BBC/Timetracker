@@ -383,3 +383,104 @@ sub add_item {
   print $table->show();
 
 }
+
+sub decomposition {
+    my %hash = (
+       Mon  => 1,
+       Tue  => 1,
+       Wed  => 2,
+       Thu  => 1,
+       Fri  => 2,
+       Sat  => 1,
+       Sun  => 1,
+  );
+
+
+  my $checkboxes;
+  my $totalcount;
+  my $label_color;
+  my $checked = '';
+  my $fibonacci_count = 0;
+
+  my @SwitchOptionCheck = split ", ", $FORM{"SwitchOption"} // "";
+  my $balcount;
+
+  my $count = 0;
+  while(my($key,$value) = each %hash){
+
+    $checked = '';
+    if($value == 1) {
+      $label_color = "label-success";
+    }elsif($value == 2){
+      $label_color = "label-warning";
+    }elsif($value > 2){
+      $label_color = "label-danger";
+    }else{
+      $label_color = "label-default";
+    }
+    for (@SwitchOptionCheck) {
+    if($_ == $count) {
+      $balcount += $value;
+      $checked = 'checked';
+    }
+  } 
+
+    $checkboxes .= $html->tpl_show(_include("timetracker_decomposition_chekbox", "Timetracker"), { NAME => $key, ID => $count, DIFFICULT => $count, LABEL_COLOR => $label_color, CHECKED => $checked}, { OUTPUT2RETURN => 1 });
+    $totalcount += $value;
+    $count++;
+
+  }
+
+
+
+  my $percentbal = ($balcount>0) ? int(($balcount * 100) / $totalcount) : 0;
+
+  my $fibonacci = fibonacci($balcount);
+
+  if ($percentbal == 0) {
+    $fibonacci = fibonacci($totalcount);
+    $html->message("info", "$lang{FIBONACHI} $fibonacci", "");
+  }
+  elsif ($percentbal < 40) {
+    $html->message("info", "$lang{FIBONACHI} $fibonacci", "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} <strong>$balcount</strong>");
+  }
+  elsif ($percentbal < 80) {
+    $html->message("info", "$lang{FIBONACHI} $fibonacci", "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} </strong>$balcount</strong>");
+  }
+  elsif ($percentbal >= 80) {
+    $html->message("info", "$lang{FIBONACHI} $fibonacci", "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} </strong>$balcount</strong>");
+  }
+
+  $html->tpl_show(_include("timetracker_decomposition_form", "Timetracker"), { CHECKBOXES => $checkboxes});
+
+
+
+  return 1;
+}
+
+#**********************************************************
+
+=head2 fibonacci($attr)
+ 
+  Arguments:
+    $attr   - Extra attributes
+ 
+  Returns:
+   TRUE or FALSE
+ 
+  Example:
+ 
+    fibonacci({ ATTR => 13 });
+ 
+=cut
+
+#**********************************************************
+sub fibonacci {
+  my ($n) = @_;
+  if ($n < 3) {
+    return 1;
+  }
+  else {
+    return fibonacci($n - 1) + fibonacci($n - 2);
+  }
+}

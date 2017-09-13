@@ -24,3 +24,11 @@ $lang{ELEMENT} = "Element";
 
 $lang{NOTABLES} = "No tables found";
 $lang{ERROR} = "Error";
+
+$lang{DECOMPOSITION} = 'Decomposition of the task';
+$lang{IT_DECOMPOSITION} = 'Decomposition';
+$lang{FIBONACHI} = 'Fibanacci number';
+$lang{DIFFICULT} = 'Complexity';
+$lang{YOUR_FINAL_SCORE} = 'from the completed task';
+$lang{YOURFINAL_SUM} = 'Sum of complexity';
+$lang{RESULT} = 'Result';
