@@ -387,7 +387,7 @@ sub add_item {
 sub decomposition {
     my %hash = (
        html  => 1,
-       prel  => 1,
+       perl  => 1,
        sql  => 1,
        "service api"  => 2,
   );
@@ -404,7 +404,7 @@ sub decomposition {
 
   my $count = 0;
 
-  foreach my $value (sort { $hash{$a} <=> $hash{$b} } keys %hash) {
+  foreach my $value (sort { $hash{$a} <=> $hash{$b} or $a cmp $b} keys %hash) {
     $checked = '';
     if($hash{$value} == 1) {
       $label_color = "label-success";

@@ -72,7 +72,7 @@
         <input type='hidden' name='submit' value='1' /> 
             <div class="panel panel-default">
                 <!-- Default panel contents -->
-                <div class="panel-heading">Декомпозиция</div>
+                <div class="panel-heading">_{IT_DECOMPOSITION}_</div>
             
                 <!-- List group -->
                 <ul class="list-group"> 
@@ -80,7 +80,7 @@
                 </ul>
 
             </div>    
-                <button type="submit" form='form_DECOMPOSTION' class="btn btn-primary btn-md btn-block" name='submit'>Result</button>   
+                <button type="submit" form='form_DECOMPOSTION' class="btn btn-primary btn-md btn-block" name='submit'>_{RESULT}_</button>   
             </form>            
         </div>
     </div>

@@ -2,7 +2,7 @@ package Timetracker;
 
 =head2
 
-  Tags
+  Timetracker
 
 =cut
 

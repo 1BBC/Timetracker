@@ -28,7 +28,7 @@ $lang{ERROR} = "Ошибка";
 
 $lang{DECOMPOSITION} = 'Декомпозиция задачи';
 $lang{IT_DECOMPOSITION} = 'Декомпозиция';
-$lang{FIBONACHI} = 'Число Фибаначчи';
+$lang{FIBONACHI} = 'Число Фибоначчи';
 $lang{DIFFICULT} = 'Сложность';
 $lang{YOUR_FINAL_SCORE} = 'от выполненной задачи';
 $lang{YOURFINAL_SUM} = 'Сума сложности';
