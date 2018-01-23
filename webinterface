@@ -6,31 +6,43 @@
 
 =cut
 
-our ($html, %FORM, $db, %conf, $admin, %lang);
-
+use strict;
+use warnings;
+use Time::Piece;
+use Abills::Base qw(time2sec);
 use Timetracker::db::Timetracker;
-my $Timetracker = Timetracker->new($db, $admin, \%conf);
 use Admins;
+
+our ($html, %FORM, $db, %conf, $admin, %lang, @WEEKDAYS);
+my $Timetracker = Timetracker->new($db, $admin, \%conf);
 my $Admins = Admins->new($db, \%conf);
 
-use Data::Dumper;
-use strict;
 
 #**********************************************************
-
 =head2 timetracker() - Accounting and time allocation. Report.
 
 =cut
-
 #**********************************************************
-
 sub timetracker {
 
-  reports({ DATE => $FORM{FROM_DATE_TO_DATE}, PERIOD_FORM => 1, NO_GROUP => 1, NO_TAGS => 1, DATE_RANGE => 1 });
+  reports(
+    { 
+      DATE        => $FORM{FROM_DATE_TO_DATE}, 
+      PERIOD_FORM => 1, 
+      NO_GROUP    => 1, 
+      NO_TAGS     => 1, 
+      DATE_RANGE  => 1 
+    }
+  );
 
-  my %hash                     = ();
-  my @element                  = ();
-  my $Timetracker_list         = $Timetracker->list_for_timetracker({ COLS_NAME => 1, DATE => $FORM{FROM_DATE_TO_DATE} });
+  my %hash             = ();
+  my @element          = ();
+  my $Timetracker_list = $Timetracker->list_for_timetracker(
+    { 
+      COLS_NAME => 1, 
+      DATE => $FORM{FROM_DATE_TO_DATE}
+    }
+  );
   my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1 });
   my $Admin_name;
   my @priority = ();
@@ -74,14 +86,13 @@ sub timetracker {
   my $sum_num_element;
 
   foreach my $name (sort keys %hash) {
-
     @num_element     = ();
     $coefficient     = 0;
     $sum_num_element = 0;
 
     foreach my $item (@element) {
       $sum_num_element += $hash{$name}->{$item};
-      push @num_element, ($hash{$name}->{$item} || 0);
+      push @num_element, sprintf('%.2f', ($hash{$name}->{$item})/100);
       foreach my $element (@priority) {
         if ($element eq $item) {
           $coefficient += $hash{$name}->{$item};
@@ -94,17 +105,15 @@ sub timetracker {
   }
 
   print $table->show();
-
+  return 1;
 }
 
-#**********************************************************
 
+#**********************************************************
 =head2 add_time() - Filling out a report.
 
 =cut
-
 #**********************************************************
-
 sub add_time {
 
   my $date_for_picker = $DATE;
@@ -117,9 +126,10 @@ sub add_time {
   my $btn_action = 'ADD';
   my $btn_value  = $lang{ADD};
   my %hash1;
+  my $support_time;
+  my ($year, undef, undef) = split('-', $DATE);
 
   if ($FORM{ADD}) {
-
     $Timetracker->del(
       {
         AID  => $admin->{AID},
@@ -128,16 +138,14 @@ sub add_time {
     );
 
     foreach my $element (@$Timetracker_list_element) {
-
       $Timetracker->add(
         {
           AID              => $admin->{AID},
           ELEMENT_ID       => $element->{id},
-          TIME_PER_ELEMENT => $FORM{ $element->{id} },
+          TIME_PER_ELEMENT => (sprintf('%.2f', $FORM{ $element->{id} })) * 100,
           DATE             => $FORM{DATE},
         }
       );
-
     }
 
     $html->message("info", $lang{ADD_MASSAGE}, $lang{OPERATION});
@@ -157,7 +165,6 @@ sub add_time {
   }
 
   if ($FORM{CHANGE}) {
-
     $Timetracker->del(
       {
         AID  => $admin->{AID},
@@ -183,13 +190,13 @@ sub add_time {
   my $Timetracker_list = $Timetracker->list_for_timetracker(
     {
       COLS_NAME => 1,
-      DATE      => $FORM{FROM_DATE_TO_DATE},
       DESC      => "desc",
+      DATE      => ">=$year-01-01",
       AID       => $admin->{AID}
     }
   );
 
-  my $Timetracker_list_element = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
+  my $Timetracker_list_element_ = $Timetracker->list_element({ COLS_NAME => 1, DESC => "desc" });
 
   my $datepicker = $html->form_datepicker("DATE", $date_for_picker);
   my $datepicker_form = $html->tpl_show(
@@ -208,12 +215,9 @@ sub add_time {
   if ($FORM{EDIT}) {
     $btn_action      = 'CHANGE';
     $btn_value       = $lang{CHANGE};
-    foreach my $element (@$Timetracker_list_element) {
-
+    foreach my $element (@$Timetracker_list_element_) {
       foreach my $item (@$Timetracker_list) {
-
         if ($item->{aid} eq $FORM{NAME} && $item->{date} eq $FORM{EDIT}) {
-
           $hash1{ $item->{element_id} } = $item->{time_per_element};
         }
       }
@@ -221,23 +225,41 @@ sub add_time {
     $datepicker_form = "<input type='hidden' name='DATE' value='$FORM{EDIT}'>";
   }
 
-  foreach my $element (@$Timetracker_list_element) {
+  require Msgs;
+  our $Msgs = Msgs->new($db, $admin, \%conf);
+  my $messages_reply_list = $Msgs->messages_reply_list(
+    { 
+      COLS_NAME => 1, 
+      AID       => $admin->{AID},
+      DATETIME  => ">$DATE",
+    }
+  );
+  foreach my $data (@$messages_reply_list){
+    $support_time += time2sec($data->{run_time}); 
+  }
+  $support_time = sprintf('%.2f',$support_time / 3600);
 
+  foreach my $element (@$Timetracker_list_element) {
+    my $num_element = '';
+    if($hash1{ $element->{id} }){
+      $num_element = $hash1{ $element->{id} };
+    }
+    elsif($element->{element} =~ /^support$/i){
+      $num_element = $support_time;
+    }
     $form_group .= $html->tpl_show(
       _include("timetracker_add_form_group", "Timetracker"),
       {
         ELEMENT     => $element->{element},
         ID          => $element->{id},
-        NUM_ELEMENT => $hash1{ $element->{id} }
+        NUM_ELEMENT => $num_element
       },
       { OUTPUT2RETURN => 1 }
     );
 
     push @element,    $element->{element};
     push @element_id, $element->{id};
-
   }
-  
 
   $html->tpl_show(
     _include("timetracker_add_form", "Timetracker"),
@@ -250,43 +272,62 @@ sub add_time {
     }
   );
 
-  my $table = $html->table(
-    {
-      width   => "100%",
-      caption => $lang{ALL_FILLING},
-      title   => [ $lang{DATE}, @element, "" ],
-      qs      => $pages_qs,
-      ID      => "TABLE_ID",
-      export  => 1
-    }
-  );
-
+  my %dates  = ();
+  my $tables = '';
+  my $count  = 0;
   foreach my $item (@$Timetracker_list) {
-    $hash{ $item->{date} }->{ $item->{element_id} } = $item->{time_per_element};
+    my $d = Time::Piece->strptime($item->{date}, "%Y-%m-%d");
+    $dates{$item->{date}} = 1;
+    $hash{$d->week}->{ $item->{date} }->{ $item->{element_id} } = $item->{time_per_element};
   }
 
-  foreach my $date (reverse sort keys %hash) {
-    @num_element = ();
-    foreach my $item (@element_id) {
-      push @num_element, ($hash{$date}->{$item} || 0);
+  my %tables = ();
+  foreach my $week (reverse sort {$a <=> $b} keys %hash) {
+
+    $tables{$week} = $html->table(
+      {
+        width   => "100%",
+        caption => $lang{WEEK} . ": " . $week,
+        title   => [ $lang{DATE}, @element, "" ],
+        qs      => $pages_qs,
+        ID      => "TABLE_ID",
+        export  => 1
+      }
+    );
+
+    foreach my $date (sort keys %{$hash{$week}}){
+      @num_element = ();
+      my $d = Time::Piece->strptime($date, "%Y-%m-%d");
+      $d->day_list(@WEEKDAYS);
+      foreach my $item (@element_id) {
+        push @num_element, sprintf('%.2f', ($hash{$week}->{$date}->{$item})/100);
+      }
+      my $del_button  = $html->button("", "index=$index&DELETE=$date&NAME=$admin->{AID}", 
+        { class => "text-danger", ADD_ICON => "glyphicon glyphicon-trash" });
+      my $edit_button = $html->button("", "index=$index&EDIT=$date&NAME=$admin->{AID}",   
+        { class => "",            ADD_ICON => "glyphicon glyphicon-pencil" });
+      $tables{$week}->addrow($d->wdayname . " " . $d->dmy, @num_element, "$edit_button$del_button");
     }
-    my $del_button  = $html->button("", "index=$index&DELETE=$date&NAME=$admin->{AID}", { class => "text-danger", ADD_ICON => "glyphicon glyphicon-trash" });
-    my $edit_button = $html->button("", "index=$index&EDIT=$date&NAME=$admin->{AID}",   { class => "",            ADD_ICON => "glyphicon glyphicon-pencil" });
-    $table->addrow($date, @num_element, "$edit_button$del_button");
+
+    $tables .= $html->element('div', $tables{$week}->show(), { class => "col-md-4" });
+    $count++;
+    if($count==3){
+      print $html->element('div', $tables, { class => "row" });
+      $tables = '';
+      $count  = 0;
+    }
   }
 
-  print $table->show();
-
+  $html->element('div', $tables, { class => "row" });
+  
+  return 1;
 }
 
 #**********************************************************
-
 =head2 add_item() - Setting the number of elements and priority.
 
 =cut
-
 #**********************************************************
-
 sub add_item {
 
   my $btn_action = 'ADD';
@@ -305,7 +346,6 @@ sub add_item {
 
   if ($FORM{DELETE}) {
     $Timetracker->del_element($FORM{DELETE});
-
     $html->message("info", $lang{DELETE_MASSAGE}, $lang{OPERATION});
   }
 
@@ -348,7 +388,6 @@ sub add_item {
         );
         last;
       }
-
     }
   }
   else {
@@ -381,56 +420,56 @@ sub add_item {
   }
 
   print $table->show();
-
+  return 1;
 }
 
 sub decomposition {
-    my %hash = (
-       html  => 1,
-       perl  => 1,
-       sql  => 1,
-       "service api"  => 2,
+  my %hash = (
+    html          => 1,
+    perl          => 1,
+    sql           => 1,
+    "service api" => 2,
   );
-
 
   my $checkboxes;
   my $totalcount;
   my $label_color;
   my $checked = '';
-  my $fibonacci_count = 0;
 
   my @SwitchOptionCheck = split ", ", $FORM{"SwitchOption"} // "";
   my $balcount;
 
   my $count = 0;
 
-  foreach my $value (sort { $hash{$a} <=> $hash{$b} or $a cmp $b} keys %hash) {
+  foreach my $value (sort {$hash{$a} <=> $hash{$b} or $a cmp $b} keys %hash) {
     $checked = '';
-    if($hash{$value} == 1) {
+    if ($hash{$value} == 1) {
       $label_color = "label-success";
-    }elsif($hash{$value} == 2){
+    }
+    elsif ($hash{$value} == 2) {
       $label_color = "label-warning";
-    }elsif($hash{$value} > 2){
+    }
+    elsif ($hash{$value} > 2) {
       $label_color = "label-danger";
-    }else{
+    }
+    else {
       $label_color = "label-default";
     }
     for (@SwitchOptionCheck) {
-    if($_ == $count) {
-      $balcount += $hash{$value};
-      $checked = 'checked';
+      if ($_ == $count) {
+        $balcount += $hash{$value};
+        $checked = 'checked';
+      }
     }
-  } 
 
-    $checkboxes .= $html->tpl_show(_include("timetracker_decomposition_chekbox", "Timetracker"), { NAME => $value, ID => $count, DIFFICULT => $count, LABEL_COLOR => $label_color, CHECKED => $checked}, { OUTPUT2RETURN => 1 });
+    $checkboxes .= $html->tpl_show(_include("timetracker_decomposition_chekbox", "Timetracker"),
+      { NAME => $value, ID => $count, DIFFICULT => $count, LABEL_COLOR => $label_color, CHECKED => $checked },
+      { OUTPUT2RETURN => 1 });
     $totalcount += $hash{$value};
     $count++;
-
   }
 
-
-
-  my $percentbal = ($balcount>0) ? int(($balcount * 100) / $totalcount) : 0;
+  my $percentbal = ($balcount > 0) ? int(($balcount * 100) / $totalcount) : 0;
 
   my $fibonacci = fibonacci($balcount);
 
@@ -439,24 +478,24 @@ sub decomposition {
     $html->message("info", "$lang{FIBONACHI} $fibonacci", "");
   }
   elsif ($percentbal < 40) {
-    $html->message("info", "$lang{FIBONACHI} $fibonacci", "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} <strong>$balcount</strong>");
+    $html->message("info", "$lang{FIBONACHI} $fibonacci",
+      "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} <strong>$balcount</strong>");
   }
   elsif ($percentbal < 80) {
-    $html->message("info", "$lang{FIBONACHI} $fibonacci", "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} </strong>$balcount</strong>");
+    $html->message("info", "$lang{FIBONACHI} $fibonacci",
+      "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} </strong>$balcount</strong>");
   }
   elsif ($percentbal >= 80) {
-    $html->message("info", "$lang{FIBONACHI} $fibonacci", "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} </strong>$balcount</strong>");
+    $html->message("info", "$lang{FIBONACHI} $fibonacci",
+      "<strong>$percentbal%</strong> $lang{YOUR_FINAL_SCORE}. $lang{YOURFINAL_SUM} </strong>$balcount</strong>");
   }
 
-  $html->tpl_show(_include("timetracker_decomposition_form", "Timetracker"), { CHECKBOXES => $checkboxes});
-
-
+  $html->tpl_show(_include("timetracker_decomposition_form", "Timetracker"), { CHECKBOXES => $checkboxes });
 
   return 1;
 }
 
 #**********************************************************
-
 =head2 fibonacci($attr)
  
   Arguments:
@@ -470,7 +509,6 @@ sub decomposition {
     fibonacci({ ATTR => 13 });
  
 =cut
-
 #**********************************************************
 sub fibonacci {
   my ($n) = @_;
@@ -481,3 +519,5 @@ sub fibonacci {
     return fibonacci($n - 1) + fibonacci($n - 2);
   }
 }
+
+1;

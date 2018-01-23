@@ -156,7 +156,7 @@ sub list_for_timetracker {
      FROM timetracker
      $WHERE;",
     undef,
-    { COLS_NAME => 1 }
+    { COLS_NAME => 1, %$attr }
   );
 
   return $self->{list};
